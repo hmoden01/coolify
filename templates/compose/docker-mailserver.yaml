@@ -1,0 +1,63 @@
+# documentation: https://docker-mailserver.github.io/docker-mailserver/latest/
+# slogan: A production-ready fullstack but simple mail server (SMTP, IMAP, LDAP, Antispam, Antivirus, etc.)
+# category: email
+# tags: mail,email,smtp,imap,pop3,antispam,antivirus,dkim,dmarc,spf
+# port: 25
+
+services:
+  mailserver:
+    image: docker.io/mailserver/docker-mailserver:latest
+    hostname: ${MAIL_HOSTNAME:-mail.example.com}
+    domainname: ${MAIL_DOMAIN:-example.com}
+    environment:
+      - ENABLE_SPAMASSASSIN=${ENABLE_SPAMASSASSIN:-1}
+      - ENABLE_CLAMAV=${ENABLE_CLAMAV:-0}
+      - ENABLE_FAIL2BAN=${ENABLE_FAIL2BAN:-1}
+      - ENABLE_POSTGREY=${ENABLE_POSTGREY:-0}
+      - ENABLE_SASLAUTHD=${ENABLE_SASLAUTHD:-0}
+      - ENABLE_AMAVIS=${ENABLE_AMAVIS:-1}
+      - ENABLE_OPENDKIM=${ENABLE_OPENDKIM:-1}
+      - ENABLE_OPENDMARC=${ENABLE_OPENDMARC:-1}
+      - ENABLE_POLICYD_SPF=${ENABLE_POLICYD_SPF:-1}
+      - ENABLE_POP3=${ENABLE_POP3:-0}
+      - ENABLE_IMAP=${ENABLE_IMAP:-1}
+      - ENABLE_MANAGESIEVE=${ENABLE_MANAGESIEVE:-1}
+      - ENABLE_QUOTAS=${ENABLE_QUOTAS:-1}
+      - ENABLE_DKIM=${ENABLE_DKIM:-1}
+      - ENABLE_DMARC=${ENABLE_DMARC:-1}
+      - ENABLE_SPF=${ENABLE_SPF:-1}
+      - SSL_TYPE=${SSL_TYPE:-letsencrypt}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+      - TLS_LEVEL=${TLS_LEVEL:-intermediate}
+      - POSTMASTER_ADDRESS=${POSTMASTER_ADDRESS:-postmaster@example.com}
+      - TZ=${TZ:-Europe/Berlin}
+    ports:
+      - "25:25"
+      - "143:143"
+      - "465:465"
+      - "587:587"
+      - "993:993"
+    volumes:
+      - mail-data:/var/mail
+      - mail-state:/var/mail-state
+      - mail-logs:/var/log/mail
+      - mail-config:/tmp/docker-mailserver
+      - /etc/localtime:/etc/localtime:ro
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    stop_grace_period: 1m
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'ss -lnt | grep -q ":25 "'
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  mail-data:
+  mail-state:
+  mail-logs:
+  mail-config:
